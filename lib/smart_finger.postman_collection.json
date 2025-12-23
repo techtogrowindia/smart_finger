@@ -1,0 +1,178 @@
+{
+  "info": {
+    "_postman_id": "d3c5b6c2-9a8a-4b1f-9a1c-complaint-collection",
+    "name": "Smart Finger Technician APIs",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Complaint Update",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"complaint_id\": 125,\n  \"status\": \"in_progress\"\n}"
+        },
+        "url": {
+          "raw": "https://sfadmin.in/app/technician/complaints/complaint_update.php",
+          "protocol": "https",
+          "host": ["sfadmin", "in"],
+          "path": ["app", "technician", "complaints", "complaint_update.php"]
+        }
+      }
+    },
+    {
+      "name": "Complaint Close",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"complaint_id\": 15,\n  \"status\": \"completed\"\n}"
+        },
+        "url": {
+          "raw": "https://sfadmin.in/app/technician/complaints/complaint_close.php",
+          "protocol": "https",
+          "host": ["sfadmin", "in"],
+          "path": ["app", "technician", "complaints", "complaint_close.php"]
+        }
+      }
+    },
+    {
+      "name": "Tracking",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"user_id\": 23,\n  \"latitude\": \"11.123456\",\n  \"longitude\": \"79.123456\",\n  \"km\": 1.2,\n  \"duty\": 0\n}"
+        },
+        "url": {
+          "raw": "https://sfadmin.in/app/technician/tracking/tracking.php",
+          "protocol": "https",
+          "host": ["sfadmin", "in"],
+          "path": ["app", "technician", "tracking", "tracking.php"]
+        }
+      }
+    },
+    {
+      "name": "Fetch Key",
+      "request": {
+        "method": "GET",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": {
+          "raw": "https://sfadmin.in/app/technician/fetch_key.php",
+          "protocol": "https",
+          "host": ["sfadmin", "in"],
+          "path": ["app", "technician", "fetch_key.php"]
+        }
+      }
+    },
+    {
+      "name": "Send OTP",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"mobile\": \"9876543210\"\n}"
+        },
+        "url": {
+          "raw": "https://sfadmin.in/app/technician/send_otp.php",
+          "protocol": "https",
+          "host": ["sfadmin", "in"],
+          "path": ["app", "technician", "send_otp.php"]
+        }
+      }
+    },
+    {
+      "name": "Verify OTP",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"otp\": \"123456\"\n}"
+        },
+        "url": {
+          "raw": "https://sfadmin.in/app/technician/verify_otp.php",
+          "protocol": "https",
+          "host": ["sfadmin", "in"],
+          "path": ["app", "technician", "verify_otp.php"]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "token",
+      "value": "ac4341d10300f2942096a17c31beff4a322b30bc3f1b1cf09fced955f793e00b",
+      "type": "string"
+    }
+  ]
+}
