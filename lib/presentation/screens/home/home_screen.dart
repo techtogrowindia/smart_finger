@@ -108,6 +108,7 @@ class _HomePageState extends State<HomePage> {
         return false;
       },
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         backgroundColor: Colors.white,
         body: BlocListener<ProfileCubit, ProfileState>(
           listener: (context, state) {
@@ -124,7 +125,7 @@ class _HomePageState extends State<HomePage> {
               _buildHomeTab(),
               CompletedScreen(isOnDuty: context.read<TrackingCubit>().isOnDuty),
               HoldScreen(isOnDuty: context.read<TrackingCubit>().isOnDuty),
-              WalletScreen(balance: walletAmount),
+              WalletScreen(initialBalance: walletAmount),
               profileData == null
                   ? const Center(child: CircularProgressIndicator())
                   : ProfileScreen(profile: profileData!),

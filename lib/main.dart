@@ -4,8 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:smart_finger/presentation/cubit/complaints/complaint_cubit.dart';
 import 'package:smart_finger/presentation/cubit/login/login_cubit.dart';
 import 'package:smart_finger/presentation/cubit/otp/otp_cubit.dart';
+import 'package:smart_finger/presentation/cubit/profile/bank_cubit.dart';
 import 'package:smart_finger/presentation/cubit/profile/profile_cubit.dart';
 import 'package:smart_finger/presentation/cubit/tracking/tracking_cubit.dart';
+import 'package:smart_finger/presentation/cubit/withdrawl/withdrawl_cubit.dart';
 import 'package:smart_finger/presentation/screens/common/splash_sccreen.dart';
 
 import 'package:smart_finger/core/service_locator.dart' as di;
@@ -30,6 +32,8 @@ class MyApp extends StatelessWidget {
         BlocProvider<ComplaintsCubit>(create: (_) => di.sl<ComplaintsCubit>()),
         BlocProvider<OtpCubit>(create: (_) => di.sl<OtpCubit>()),
         BlocProvider<TrackingCubit>(create: (_) => di.sl<TrackingCubit>()),
+        BlocProvider<BankCubit>(create: (_) => di.sl<BankCubit>()),
+        BlocProvider<WithdrawalCubit>(create: (_) => di.sl<WithdrawalCubit>()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

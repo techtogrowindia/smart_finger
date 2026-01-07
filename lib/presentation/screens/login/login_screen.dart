@@ -212,7 +212,6 @@ class _LoginPageState extends State<LoginPage> {
                                       ),
                                       const SizedBox(height: 15),
 
-                                      // Remember Me
                                       Row(
                                         children: [
                                           Checkbox(

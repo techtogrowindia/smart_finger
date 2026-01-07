@@ -1,26 +1,40 @@
 // ignore_for_file: deprecated_member_use, use_build_context_synchronously, unrelated_type_equality_checks
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:smart_finger/data/models/profile_response.dart';
 import 'package:smart_finger/core/colors.dart';
 import 'package:smart_finger/data/services/logout_service.dart';
+import 'package:smart_finger/presentation/cubit/profile/bank_cubit.dart';
 import 'package:smart_finger/presentation/screens/common/exit_dialog.dart';
 import 'package:smart_finger/presentation/screens/common/no_internet_screen.dart';
 import 'package:smart_finger/presentation/screens/login/login_screen.dart';
+import 'package:smart_finger/presentation/screens/profile/bank_details_dialog.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   final ProfileData profile;
 
   const ProfileScreen({super.key, required this.profile});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  BankDetails? _localBank; // <- local bank details for immediate updates
+
+  @override
+  void initState() {
+    super.initState();
+    _localBank = widget.profile.bankDetails; // initial data
+  }
 
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
 
     return WillPopScope(
-      onWillPop: () async {
-        return false;
-      },
+      onWillPop: () async => false,
       child: Scaffold(
         backgroundColor: Colors.grey[100],
         appBar: AppBar(
@@ -28,11 +42,48 @@ class ProfileScreen extends StatelessWidget {
           backgroundColor: AppColors.primary,
           elevation: 5,
           automaticallyImplyLeading: false,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.logout, color: Colors.white),
+              onPressed: () async {
+                final shouldExit = await ExitConfirmation.show(
+                  context,
+                  message: 'Do you want to logout?',
+                );
+
+                if (shouldExit) {
+                  final result = await LogoutService().logout();
+                  if (result == "SUCCESS") {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (_) => const LoginPage()),
+                      (route) => false,
+                    );
+                  } else if (result == "NO_INTERNET") {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const NoInternetScreen(),
+                      ),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Logout failed. Please try again."),
+                        backgroundColor: Colors.redAccent,
+                      ),
+                    );
+                  }
+                }
+              },
+            ),
+          ],
         ),
         body: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
           child: Column(
             children: [
+              /// PROFILE HEADER
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 30),
@@ -48,11 +99,11 @@ class ProfileScreen extends StatelessWidget {
                   children: [
                     CircleAvatar(
                       radius: 50,
-                      backgroundImage: profile.profileImage.isNotEmpty
-                          ? NetworkImage(profile.profileImage)
+                      backgroundImage: widget.profile.profileImage.isNotEmpty
+                          ? NetworkImage(widget.profile.profileImage)
                           : null,
                       backgroundColor: Colors.grey[300],
-                      child: profile.profileImage.isEmpty
+                      child: widget.profile.profileImage.isEmpty
                           ? const Icon(
                               Icons.person,
                               size: 50,
@@ -62,7 +113,7 @@ class ProfileScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 15),
                     Text(
-                      profile.name,
+                      widget.profile.name,
                       style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
@@ -71,7 +122,7 @@ class ProfileScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 5),
                     Text(
-                      profile.email,
+                      widget.profile.email,
                       style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 14,
@@ -80,22 +131,24 @@ class ProfileScreen extends StatelessWidget {
                   ],
                 ),
               ),
-
               const SizedBox(height: 20),
 
+              /// BASIC INFO
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _infoCard(
                     icon: Icons.phone,
                     label: "Mobile",
-                    value: profile.mobile,
+                    value: widget.profile.mobile,
                     width: (width - 40) / 2,
                   ),
                   _infoCard(
                     icon: Icons.location_city,
                     label: "District",
-                    value: profile.district,
+                    value: widget.profile.district.isEmpty
+                        ? "-"
+                        : widget.profile.district,
                     width: (width - 40) / 2,
                   ),
                 ],
@@ -107,65 +160,22 @@ class ProfileScreen extends StatelessWidget {
                   _infoCard(
                     icon: Icons.pin,
                     label: "Pincode",
-                    value: profile.pincode,
+                    value: widget.profile.pincode.isEmpty
+                        ? "-"
+                        : widget.profile.pincode,
                     width: (width - 40) / 2,
                   ),
                   _infoCard(
                     icon: Icons.person,
                     label: "User ID",
-                    value: profile.userId.toString(),
+                    value: widget.profile.userId.toString(),
                     width: (width - 40) / 2,
                   ),
                 ],
               ),
-
               const SizedBox(height: 30),
 
-              _actionButton(
-                context,
-                icon: Icons.edit,
-                label: "Edit Profile",
-                onTap: () {},
-              ),
-              const SizedBox(height: 16),
-              _actionButton(
-                context,
-                icon: Icons.logout,
-                label: "Logout",
-                onTap: () async {
-                  final shouldExit = await ExitConfirmation.show(
-                    context,
-                    message:
-                        'Do you want to leave Complaint Details and go to Home?',
-                  );
-
-                  if (shouldExit) {
-                    final result = await LogoutService().logout();
-
-                    if (result == "SUCCESS") {
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(builder: (_) => const LoginPage()),
-                        (route) => false,
-                      );
-                    } else if (result == "NO_INTERNET") {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const NoInternetScreen(),
-                        ),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Logout failed. Please try again."),
-                          backgroundColor: Colors.redAccent,
-                        ),
-                      );
-                    }
-                  }
-                },
-              ),
+              _bankDetailsCard(_localBank), // use local bank
             ],
           ),
         ),
@@ -209,39 +219,90 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _actionButton(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
+  Widget _bankDetailsCard(BankDetails? bank) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                "Bank Details",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              IconButton(
+                icon: const Icon(Icons.edit, color: AppColors.primary),
+                onPressed: () async {
+                  final updatedBank = await showDialog<BankDetails>(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (_) => BankDetailsDialog(bank: bank),
+                  );
+
+                  context.read<BankCubit>().reset();
+
+                  if (updatedBank != null) {
+                    setState(() {
+                      _localBank = updatedBank; // update local bank
+                    });
+                  }
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (bank == null)
+            const Text(
+              "Bank details not added",
+              style: TextStyle(color: Colors.grey),
+            )
+          else ...[
+            _bankRow("Bank Name", bank.bankName),
+            _bankRow("Account Name", bank.accountName),
+            _bankRow("Account No", bank.accountNo),
+            _bankRow("IFSC", bank.ifsc),
+            _bankRow("Branch", bank.branchName),
+            _bankRow("UPI ID", bank.upiId),
+            _bankRow("GPay No", bank.gpayNumber),
           ],
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: AppColors.primary),
-            const SizedBox(width: 16),
-            Text(
+        ],
+      ),
+    );
+  }
+
+  Widget _bankRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 110,
+            child: Text(
               label,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              style: const TextStyle(fontSize: 13, color: Colors.grey),
             ),
-          ],
-        ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
       ),
     );
   }
