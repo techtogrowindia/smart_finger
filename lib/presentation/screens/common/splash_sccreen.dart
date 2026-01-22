@@ -29,9 +29,7 @@ class _SplashScreenState extends State<SplashScreen>
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 1.5),
       end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _logoController, curve: Curves.easeOut),
-    );
+    ).animate(CurvedAnimation(parent: _logoController, curve: Curves.easeOut));
 
     // Logo scales up
     _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
@@ -39,9 +37,10 @@ class _SplashScreenState extends State<SplashScreen>
     );
 
     // Logo fades in
-    _opacityAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _logoController, curve: Curves.easeIn),
-    );
+    _opacityAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _logoController, curve: Curves.easeIn));
 
     _logoController.forward();
 
@@ -74,7 +73,7 @@ class _SplashScreenState extends State<SplashScreen>
             child: FadeTransition(
               opacity: _opacityAnimation,
               child: Image.asset(
-                "assets/images/smartfinger_logo.png",
+                "assets/images/smartfinger_logo.jpeg",
                 width: size.width * 0.60, // responsive size
               ),
             ),

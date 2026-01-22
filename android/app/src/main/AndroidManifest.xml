@@ -1,20 +1,41 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.smart_finger">
+          xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Location permissions -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
+    <!-- Optional but recommended -->
+    <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
-        android:label="smart_finger"
+        android:label="smartfingers"
         android:enableOnBackInvokedCallback="true"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
 
-        <!-- ✅ Google Maps API KEY MUST BE HERE (inside <application>) -->
+        <service
+            android:name="id.flutter.flutter_background_service.BackgroundService"
+            android:permission="android.permission.FOREGROUND_SERVICE"
+            android:enabled="true"
+            android:exported="true"
+            android:foregroundServiceType="location"
+            tools:replace="android:exported"/>
+
+        <!-- 🔑 Google Maps API Key -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyAOBtU_Owbps9YOdPK9Izh4YUkV4lOvreA"/>
+
+        
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+             android:value="new_complaint_channel"/>
+    
 
         <activity
             android:name=".MainActivity"

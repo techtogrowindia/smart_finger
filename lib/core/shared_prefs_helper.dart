@@ -2,6 +2,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class SharedPrefsHelper {
   static const tokenKey = "auth_token";
+  static const idKey = "user_id";
+
 
   static Future<void> saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
@@ -16,6 +18,17 @@ class SharedPrefsHelper {
   static Future<void> clearToken() async {
     final prefs = await SharedPreferences.getInstance();
     prefs.remove(tokenKey);
+  }
+
+  
+  static Future<void> saveID(int id) async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setInt(idKey, id);
+  }
+
+  static Future<int?> getID() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(idKey);
   }
 
   // Remember Me credentials

@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:smart_finger/core/shared_prefs_helper.dart';
 
@@ -24,8 +23,6 @@ class LogoutService {
         },
       );
 
-      debugPrint("LOGOUT STATUS => ${response.statusCode}");
-      debugPrint("LOGOUT BODY => ${response.body}");
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -40,7 +37,6 @@ class LogoutService {
     } on SocketException {
       return "NO_INTERNET";
     } catch (e) {
-      debugPrint("LOGOUT ERROR => $e");
       return "ERROR";
     }
   }

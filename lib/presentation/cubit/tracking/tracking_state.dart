@@ -9,7 +9,6 @@ class TrackingKmUpdated extends TrackingState {
   TrackingKmUpdated(this.totalKm);
 }
 
-/// ✅ NEW — clear duty success state
 class TrackingDutyChanged extends TrackingState {
   final bool isOnDuty;
   TrackingDutyChanged(this.isOnDuty);

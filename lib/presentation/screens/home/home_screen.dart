@@ -4,7 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
+
 import 'package:smart_finger/core/colors.dart';
+import 'package:smart_finger/core/firebase/fcm_helper.dart';
+
 import 'package:smart_finger/data/models/profile_response.dart';
 import 'package:smart_finger/data/models/complaints_response.dart';
 import 'package:smart_finger/presentation/cubit/complaints/complaint_cubit.dart';
@@ -18,11 +22,13 @@ import 'package:smart_finger/presentation/screens/common/no_internet_screen.dart
 import 'package:smart_finger/presentation/screens/complaints/complaints_detail_screen.dart';
 import 'package:smart_finger/presentation/screens/complaints/completed_screen.dart';
 import 'package:smart_finger/presentation/screens/complaints/hold_screen.dart';
+import 'package:smart_finger/presentation/screens/notifications/notifications_screen.dart';
 import 'package:smart_finger/presentation/screens/wallet/wallet_screen.dart';
 import 'package:smart_finger/presentation/screens/profile/profile_screen.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final String? highlightComplaintId;
+  const HomePage({super.key, this.highlightComplaintId});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -41,13 +47,15 @@ class _HomePageState extends State<HomePage> {
   double? currentLng;
   bool isLocationReady = false;
   DateTime? selectedDate;
-
+  bool _askedNotification = false;
   @override
   void initState() {
     super.initState();
+
     context.read<ProfileCubit>().loadProfile();
     context.read<ComplaintsCubit>().loadComplaints();
     _loadCurrentLocation();
+    FcmHelper.handleNotificationPermission();
   }
 
   Future<void> _loadCurrentLocation() async {
@@ -90,6 +98,12 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         isLocationReady = true;
       });
+
+      if (!_askedNotification) {
+        _askedNotification = true;
+        await Future.delayed(const Duration(seconds: 2));
+        await FcmHelper.handleNotificationPermission();
+      }
     } catch (e) {
       setState(() => currentLocation = "Unable to fetch location");
     }
@@ -111,12 +125,15 @@ class _HomePageState extends State<HomePage> {
         resizeToAvoidBottomInset: false,
         backgroundColor: Colors.white,
         body: BlocListener<ProfileCubit, ProfileState>(
-          listener: (context, state) {
+          listener: (context, state) async {
             if (state is ProfileSuccess) {
               profileData = state.response.data;
               walletAmount = profileData!.wallet;
               userId = profileData!.userId;
+
               setState(() {});
+
+              FcmHelper(technicianId: userId!).initFCM();
             }
           },
           child: IndexedStack(
@@ -162,6 +179,15 @@ class _HomePageState extends State<HomePage> {
               ),
               Row(
                 children: [
+                  // Refresh button
+                  IconButton(
+                    icon: const Icon(Icons.refresh, color: AppColors.primary),
+                    tooltip: "Refresh complaints for today",
+                    onPressed: () {
+                      context.read<ComplaintsCubit>().loadComplaints();
+                    },
+                  ),
+
                   if (selectedDate != null)
                     IconButton(
                       icon: const Icon(Icons.clear, color: AppColors.primary),
@@ -230,6 +256,22 @@ class _HomePageState extends State<HomePage> {
                       created.month == selectedDate!.month &&
                       created.day == selectedDate!.day;
                 }).toList();
+                active.sort(
+                  (a, b) => DateTime.parse(
+                    b.createdAt,
+                  ).compareTo(DateTime.parse(a.createdAt)),
+                );
+
+                if (widget.highlightComplaintId != null) {
+                  final index = active.indexWhere(
+                    (c) => c.id.toString() == widget.highlightComplaintId,
+                  );
+
+                  if (index != -1) {
+                    final item = active.removeAt(index);
+                    active.insert(0, item);
+                  }
+                }
 
                 if (active.isEmpty) {
                   return const Center(child: Text("No complaints found"));
@@ -269,13 +311,26 @@ class _HomePageState extends State<HomePage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                "SmartFingers",
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
+              Row(
+                children: [
+                  const Text(
+                    "SmartFingers",
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => NotificationScreen()),
+                      );
+                    },
+                    icon: Icon(Icons.notifications, color: Colors.white),
+                  ),
+                ],
               ),
               Row(
                 children: [
@@ -314,13 +369,23 @@ class _HomePageState extends State<HomePage> {
                             (!isLocationReady || state is TrackingInProgress)
                             ? null
                             : (val) async {
+                                final service = FlutterBackgroundService();
+
                                 if (val) {
+                                  // Start service only if not running
+                                  if (!(await service.isRunning())) {
+                                    await service.startService();
+                                  }
+
                                   trackingCubit.onDuty(
                                     userId: userId!,
                                     lat: currentLat!,
                                     lng: currentLng!,
                                   );
                                 } else {
+                                  // Stop background service
+                                  service.invoke("stopService");
+
                                   trackingCubit.offDuty(
                                     userId: userId!,
                                     lat: currentLat!,
@@ -408,8 +473,21 @@ class _HomePageState extends State<HomePage> {
       itemCount: complaints.length,
       itemBuilder: (context, index) {
         final c = complaints[index];
+        final bool isHighlighted =
+            widget.highlightComplaintId != null &&
+            c.id.toString() == widget.highlightComplaintId;
         return Card(
           margin: const EdgeInsets.only(bottom: 10),
+          elevation: isHighlighted ? 6 : 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: isHighlighted
+                ? const BorderSide(color: AppColors.primary, width: 2)
+                : BorderSide.none,
+          ),
+          color: isHighlighted
+              ? AppColors.primary.withOpacity(0.08)
+              : Colors.white,
           child: ListTile(
             leading: CircleAvatar(
               backgroundColor: AppColors.primary,
@@ -418,12 +496,38 @@ class _HomePageState extends State<HomePage> {
                 style: const TextStyle(color: Colors.white),
               ),
             ),
-            title: Text(
-              c.comments,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontWeight: FontWeight.w600),
+            title: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    c.comments,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+                if (isHighlighted)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text(
+                      "NEW",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+              ],
             ),
+
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

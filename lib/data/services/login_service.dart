@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:smart_finger/core/shared_prefs_helper.dart';
 import '../../data/models/login_response.dart';
@@ -19,8 +18,6 @@ class LoginService {
       body: jsonEncode({"mobile": mobile.trim(), "password": password.trim()}),
     );
 
-    debugPrint("LOGIN STATUS => ${response.statusCode}");
-    debugPrint("LOGIN BODY => ${response.body}");
 
     final Map<String, dynamic> decodedJson;
     try {
@@ -35,11 +32,7 @@ class LoginService {
 
     if (loginResponse.statusCode == 200 && token != null && token.isNotEmpty) {
       await SharedPrefsHelper.saveToken(token);
-
-      final savedToken = await SharedPrefsHelper.getToken();
-      debugPrint("TOKEN SAVED => $savedToken");
     } else {
-      debugPrint("TOKEN NOT SAVED (missing or invalid)");
     }
 
     return loginResponse;

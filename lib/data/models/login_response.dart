@@ -15,6 +15,6 @@ class LoginResponse {
     statusCode = json["status_code"];
     status = json["status"];
     message = json["message"];
-    token = json["token"]; // ✅ THIS WAS MISSING / WRONG
+    token = json["token"];
   }
 }

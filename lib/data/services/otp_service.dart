@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../models/send_otp_response.dart';
 import '../models/verify_otp_response.dart';
@@ -17,8 +16,6 @@ class OtpService {
       body: jsonEncode({"mobile": mobile}),
     );
 
-    debugPrint("Otp STATUS => ${response.statusCode}");
-    debugPrint("Otp BODY => ${response.body}");
     if (response.statusCode == 200) {
       return SendOtpResponse.fromJson(jsonDecode(response.body));
     } else {

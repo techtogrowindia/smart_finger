@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "581689395264",
+    "project_id": "smartfingers-453915",
+    "storage_bucket": "smartfingers-453915.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:581689395264:android:ddac0bb7de9d0398cb37a5",
+        "android_client_info": {
+          "package_name": "com.techtogrow.smartfingers"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCsOfpsneYuLKBTHslTvQ-BtNS7kIqNfUo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:581689395264:android:4d3efca5c19a14a1cb37a5",
+        "android_client_info": {
+          "package_name": "com.techtogrow.smartfingerstechnician"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCsOfpsneYuLKBTHslTvQ-BtNS7kIqNfUo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

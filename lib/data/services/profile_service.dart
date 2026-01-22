@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:smart_finger/core/shared_prefs_helper.dart';
 import '../models/profile_response.dart';
@@ -17,9 +16,6 @@ class ProfileService {
         "Authorization": "Bearer $token",
       },
     );
-    debugPrint("Profile Status: ${response.statusCode}");
-    debugPrint("Profile Response: ${response.body}");
-
     return ProfileResponse.fromJson(jsonDecode(response.body));
   }
 }

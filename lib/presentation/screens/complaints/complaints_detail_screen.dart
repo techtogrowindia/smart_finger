@@ -46,6 +46,8 @@ class _ComplaintDetailsScreenState extends State<ComplaintDetailsScreen> {
     switch (currentStatus.toUpperCase()) {
       case 'START':
         return ['START', 'REACHED', 'HOLD', 'COMPLETED'];
+      case 'ASSIGNED':
+        return ['ASSIGNED', 'START', 'REACHED', 'HOLD', 'COMPLETED'];
 
       case 'REACHED':
         return ['REACHED', 'HOLD', 'COMPLETED'];

@@ -2,6 +2,7 @@ import 'package:get_it/get_it.dart';
 import 'package:smart_finger/data/repositories/bank_repository.dart';
 import 'package:smart_finger/data/repositories/complaint_repository.dart';
 import 'package:smart_finger/data/repositories/login_repository.dart';
+import 'package:smart_finger/data/repositories/notification_repository.dart';
 import 'package:smart_finger/data/repositories/otp_repository.dart';
 import 'package:smart_finger/data/repositories/profile_repository.dart';
 import 'package:smart_finger/data/repositories/tracking_repository.dart';
@@ -9,12 +10,14 @@ import 'package:smart_finger/data/repositories/withdrawl_repository.dart';
 import 'package:smart_finger/data/services/bank_service.dart';
 import 'package:smart_finger/data/services/complaint_service.dart';
 import 'package:smart_finger/data/services/login_service.dart';
+import 'package:smart_finger/data/services/notification_service.dart';
 import 'package:smart_finger/data/services/otp_service.dart';
 import 'package:smart_finger/data/services/profile_service.dart';
 import 'package:smart_finger/data/services/tracking_service.dart';
 import 'package:smart_finger/data/services/withdrawl_service.dart';
 import 'package:smart_finger/presentation/cubit/complaints/complaint_cubit.dart';
 import 'package:smart_finger/presentation/cubit/login/login_cubit.dart';
+import 'package:smart_finger/presentation/cubit/notifications/notification_cubit.dart';
 import 'package:smart_finger/presentation/cubit/otp/otp_cubit.dart';
 import 'package:smart_finger/presentation/cubit/profile/bank_cubit.dart';
 import 'package:smart_finger/presentation/cubit/profile/profile_cubit.dart';
@@ -87,5 +90,17 @@ Future<void> init() async {
 
   sl.registerFactory<WithdrawalCubit>(
     () => WithdrawalCubit(repository: sl<WithdrawalRepository>()),
+  );
+
+   //Notifications
+
+  sl.registerLazySingleton<NotificationService>(() => NotificationService());
+
+  sl.registerLazySingleton<NotificationRepository>(
+    () => NotificationRepository(service: sl()),
+  );
+
+  sl.registerFactory<NotificationCubit>(
+    () => NotificationCubit(repository: sl<NotificationRepository>()),
   );
 }
