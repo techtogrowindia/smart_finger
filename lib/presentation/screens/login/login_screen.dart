@@ -9,6 +9,7 @@ import 'package:smart_finger/presentation/cubit/login/login_cubit.dart';
 import 'package:smart_finger/presentation/cubit/login/login_state.dart';
 import 'package:smart_finger/presentation/screens/common/exit_dialog.dart';
 import 'package:smart_finger/presentation/screens/common/no_internet_screen.dart';
+import 'package:smart_finger/presentation/screens/forgot_password/forgot_password_screen.dart';
 import 'package:smart_finger/presentation/screens/home/home_screen.dart';
 
 class LoginPage extends StatefulWidget {
@@ -210,7 +211,27 @@ class _LoginPageState extends State<LoginPage> {
                                           return null;
                                         },
                                       ),
-                                      const SizedBox(height: 15),
+                                      Align(
+                                        alignment:
+                                            AlignmentGeometry.centerRight,
+                                        child: TextButton(
+                                          onPressed: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) =>
+                                                    const ForgotPasswordScreen(),
+                                              ),
+                                            );
+                                          },
+                                          child: Text(
+                                            'Forgot Password?',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
 
                                       Row(
                                         children: [

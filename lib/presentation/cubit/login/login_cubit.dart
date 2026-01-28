@@ -19,12 +19,9 @@ class LoginCubit extends Cubit<LoginState> {
       } else {
         emit(LoginFailure(res.message ?? 'Login failed'));
       }
-
-    }
-    on SocketException catch (_) {
-      emit( LoginFailure("NO_INTERNET"));
-    }
-    catch (e) {
+    } on SocketException catch (_) {
+      emit(LoginFailure("NO_INTERNET"));
+    } catch (e) {
       emit(LoginFailure("Something went wrong"));
     }
   }

@@ -1,24 +1,33 @@
 import 'package:get_it/get_it.dart';
 import 'package:smart_finger/data/repositories/bank_repository.dart';
 import 'package:smart_finger/data/repositories/complaint_repository.dart';
+import 'package:smart_finger/data/repositories/forgot_password_repository.dart';
+import 'package:smart_finger/data/repositories/invoice_repository.dart';
 import 'package:smart_finger/data/repositories/login_repository.dart';
 import 'package:smart_finger/data/repositories/notification_repository.dart';
 import 'package:smart_finger/data/repositories/otp_repository.dart';
+import 'package:smart_finger/data/repositories/product_repository.dart';
 import 'package:smart_finger/data/repositories/profile_repository.dart';
 import 'package:smart_finger/data/repositories/tracking_repository.dart';
 import 'package:smart_finger/data/repositories/withdrawl_repository.dart';
 import 'package:smart_finger/data/services/bank_service.dart';
 import 'package:smart_finger/data/services/complaint_service.dart';
+import 'package:smart_finger/data/services/forgot_password_service.dart';
+import 'package:smart_finger/data/services/invoice_service.dart';
 import 'package:smart_finger/data/services/login_service.dart';
 import 'package:smart_finger/data/services/notification_service.dart';
 import 'package:smart_finger/data/services/otp_service.dart';
+import 'package:smart_finger/data/services/product_service.dart';
 import 'package:smart_finger/data/services/profile_service.dart';
 import 'package:smart_finger/data/services/tracking_service.dart';
 import 'package:smart_finger/data/services/withdrawl_service.dart';
 import 'package:smart_finger/presentation/cubit/complaints/complaint_cubit.dart';
+import 'package:smart_finger/presentation/cubit/forgot_password/forgot_password_cubit.dart';
+import 'package:smart_finger/presentation/cubit/invoice/invoice_cubit.dart';
 import 'package:smart_finger/presentation/cubit/login/login_cubit.dart';
 import 'package:smart_finger/presentation/cubit/notifications/notification_cubit.dart';
 import 'package:smart_finger/presentation/cubit/otp/otp_cubit.dart';
+import 'package:smart_finger/presentation/cubit/products/product_cubit.dart';
 import 'package:smart_finger/presentation/cubit/profile/bank_cubit.dart';
 import 'package:smart_finger/presentation/cubit/profile/profile_cubit.dart';
 import 'package:smart_finger/presentation/cubit/tracking/tracking_cubit.dart';
@@ -92,7 +101,7 @@ Future<void> init() async {
     () => WithdrawalCubit(repository: sl<WithdrawalRepository>()),
   );
 
-   //Notifications
+  //Notifications
 
   sl.registerLazySingleton<NotificationService>(() => NotificationService());
 
@@ -103,4 +112,29 @@ Future<void> init() async {
   sl.registerFactory<NotificationCubit>(
     () => NotificationCubit(repository: sl<NotificationRepository>()),
   );
+
+  //Products
+  sl.registerLazySingleton<ProductApiService>(() => ProductApiService());
+  sl.registerLazySingleton<ProductRepository>(() => ProductRepository(sl()));
+  sl.registerFactory<ProductCubit>(
+    () => ProductCubit(repository: sl<ProductRepository>()),
+  );
+
+  //forgot password
+  sl.registerLazySingleton<ForgotPasswordService>(
+    () => ForgotPasswordService(),
+  );
+  sl.registerLazySingleton<ForgotPasswordRepository>(
+    () => ForgotPasswordRepository(sl()),
+  );
+  sl.registerFactory<ForgotPasswordCubit>(
+    () => ForgotPasswordCubit( sl<ForgotPasswordRepository>()),
+  );
+
+  // invoice
+
+  sl.registerLazySingleton<InvoiceService>(() => InvoiceService());
+  sl.registerLazySingleton<InvoiceRepository>(() => InvoiceRepository(sl()));
+  sl.registerFactory<InvoiceCubit>(() => InvoiceCubit(sl<InvoiceRepository>()));
+
 }

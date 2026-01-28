@@ -1,29 +1,42 @@
-// ignore_for_file: deprecated_member_use, use_build_context_synchronously
+// ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lottie/lottie.dart';
 
 import 'package:smart_finger/core/colors.dart';
 import 'package:smart_finger/data/models/complaints_response.dart';
+import 'package:smart_finger/data/models/invoice_request_model.dart';
+import 'package:smart_finger/data/models/selected_products.dart';
+import 'package:smart_finger/data/services/razorpay_service.dart';
 
 import 'package:smart_finger/presentation/cubit/complaints/complaint_cubit.dart';
 import 'package:smart_finger/presentation/cubit/complaints/complaint_state.dart';
+import 'package:smart_finger/presentation/cubit/invoice/invoice_cubit.dart';
+import 'package:smart_finger/presentation/cubit/invoice/invoice_state.dart';
 import 'package:smart_finger/presentation/cubit/otp/otp_cubit.dart';
 import 'package:smart_finger/presentation/cubit/otp/otp_state.dart';
+import 'package:smart_finger/presentation/cubit/products/product_cubit.dart';
 import 'package:smart_finger/presentation/cubit/tracking/tracking_cubit.dart';
 import 'package:smart_finger/presentation/screens/common/google_map_screen.dart';
 import 'package:smart_finger/presentation/screens/common/no_internet_screen.dart';
 import 'package:smart_finger/presentation/screens/common/otp_bottom_sheet.dart';
 import 'package:smart_finger/presentation/screens/home/home_screen.dart';
+import 'package:smart_finger/presentation/screens/invoice/invoice_history_screen.dart';
+import 'package:smart_finger/presentation/screens/products/checkout_bottomsheet.dart';
+import 'package:smart_finger/presentation/screens/products/payment_bottomsheet.dart';
+import 'package:smart_finger/presentation/screens/products/product_selection_bottomsheet.dart';
 
 class ComplaintDetailsScreen extends StatefulWidget {
   final Complaint complaint;
   final bool isOnDuty;
+  final int technicianId;
 
   const ComplaintDetailsScreen({
     super.key,
     required this.complaint,
     required this.isOnDuty,
+    required this.technicianId,
   });
 
   @override
@@ -33,6 +46,13 @@ class ComplaintDetailsScreen extends StatefulWidget {
 class _ComplaintDetailsScreenState extends State<ComplaintDetailsScreen> {
   late String selectedStatus;
   late List<String> statusList;
+  List<SelectedProduct> _selectedItems = [];
+  bool isCashPayment = false;
+
+  double _subtotal = 0;
+  double _discount = 0;
+  double _payable = 0;
+  late RazorpayService _razorpayService;
 
   @override
   void initState() {
@@ -40,6 +60,17 @@ class _ComplaintDetailsScreenState extends State<ComplaintDetailsScreen> {
     selectedStatus = widget.complaint.status.toUpperCase();
 
     statusList = _getStatusList(widget.complaint.status.toUpperCase());
+
+    _razorpayService = RazorpayService(
+      onSuccess: (paymentId) {
+        showInvoiceSuccessLottieDialog(context, "Payment Successful");
+      },
+      onFailure: () {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Payment Failed")));
+      },
+    );
   }
 
   List<String> _getStatusList(String currentStatus) {
@@ -111,6 +142,50 @@ class _ComplaintDetailsScreenState extends State<ComplaintDetailsScreen> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(otpState.message),
+                    backgroundColor: Colors.redAccent,
+                  ),
+                );
+              }
+            }
+          },
+        ),
+        BlocListener<InvoiceCubit, InvoiceState>(
+          listener: (context, state) async {
+            if (state is InvoiceLoading) {
+              _showLoader(context);
+            }
+
+            if (state is InvoiceSuccess) {
+              Navigator.pop(context);
+              if (isCashPayment) {
+                showInvoiceSuccessLottieDialog(context, state.response.message);
+              } else {
+                _razorpayService.openCheckout(
+                  amount: state.response.amount,
+                  description: "Service Payment",
+                  contact: "9876543210",
+                  email: "support@smartfinger.com",
+                  orderId: state.response.razorpayOrderId,
+                );
+              }
+            }
+
+            if (state is InvoiceError) {
+              Navigator.pop(context);
+
+              if (state.message == "NO_INTERNET") {
+                final restored = await Navigator.push<bool>(
+                  context,
+                  MaterialPageRoute(builder: (_) => const NoInternetScreen()),
+                );
+
+                if (restored == true) {
+                  context.read<InvoiceCubit>().reset();
+                }
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(state.message),
                     backgroundColor: Colors.redAccent,
                   ),
                 );
@@ -208,6 +283,7 @@ class _ComplaintDetailsScreenState extends State<ComplaintDetailsScreen> {
                       title: "Complaint Info",
                       icon: Icons.build,
                       children: [
+                        _infoRow("Warranty Status", c.warrantyLabel),
                         _infoRow("Warranty No", c.warrantyNumber),
                         _infoRow("Comments", c.comments),
                         _infoRow("Private Notes", c.privateNotes),
@@ -238,13 +314,40 @@ class _ComplaintDetailsScreenState extends State<ComplaintDetailsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            "Complaint #${c.id}",
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+          Row(
+            children: [
+              Text(
+                "Complaint #${c.id}",
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Spacer(),
+              Row(
+                children: [
+                  Icon(Icons.receipt_long, color: Colors.white),
+                  TextButton.icon(
+                    onPressed: () {
+                      !widget.isOnDuty
+                          ? ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  "Please turn ON duty to update complaint",
+                                ),
+                              ),
+                            )
+                          : _openProductSelection();
+                    },
+                    label: const Text(
+                      "Invoice",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
           const SizedBox(height: 6),
           Text(c.comments, style: const TextStyle(color: Colors.white70)),
@@ -318,7 +421,18 @@ class _ComplaintDetailsScreenState extends State<ComplaintDetailsScreen> {
                           }
 
                           if (selectedStatus == "COMPLETED") {
-                            context.read<OtpCubit>().sendOtp(c.customerNumber);
+                            c.invoiceAvailable
+                                ? context.read<OtpCubit>().sendOtp(
+                                    c.customerNumber,
+                                  )
+                                : ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        "Invoice not available for this complaint, cannot mark as completed",
+                                      ),
+                                      backgroundColor: Colors.redAccent,
+                                    ),
+                                  );
                           } else {
                             context
                                 .read<ComplaintsCubit>()
@@ -429,5 +543,181 @@ class _ComplaintDetailsScreenState extends State<ComplaintDetailsScreen> {
       barrierDismissible: false,
       builder: (_) => const Center(child: CircularProgressIndicator()),
     );
+  }
+
+  void _openProductSelection() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => BlocProvider.value(
+        value: context.read<ProductCubit>(),
+        child: ProductSelectionBottomSheet(
+          complaint: widget.complaint,
+          onCheckout: (items) {
+            Navigator.pop(context);
+            _openCheckout(items);
+          },
+        ),
+      ),
+    );
+  }
+
+  void _openCheckout(List<SelectedProduct> items) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => CheckoutBottomSheet(
+        complaint: widget.complaint,
+        items: items,
+        onProceed: (payable) {
+          Navigator.pop(context);
+
+          _selectedItems = items;
+
+          _subtotal = items.fold(0, (sum, e) => sum + (e.price * e.quantity));
+
+          _payable = payable;
+          _discount = _subtotal - payable;
+          if (payable == 0) {
+            isCashPayment = true;
+            _createInvoice(paymentMethod: "CASH", paymentId: "");
+          } else {
+            _openPayment(payable);
+          }
+        },
+      ),
+    );
+  }
+
+  void _openPayment(double amount) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width),
+      builder: (_) => PaymentBottomSheet(
+        amount: amount,
+        onCash: () {
+          Navigator.pop(context);
+          _createInvoice(paymentMethod: "CASH", paymentId: "");
+          isCashPayment = true;
+        },
+        onRazorPaySuccess: () {
+          Navigator.pop(context);
+          _createInvoice(paymentMethod: "Razorpay", paymentId: '');
+        },
+      ),
+    );
+  }
+
+  void _createInvoice({
+    required String paymentMethod,
+    required String paymentId,
+  }) {
+    final request = InvoiceRequest(
+      complaintId: widget.complaint.id,
+      technicianId: widget.technicianId,
+      products: _selectedItems
+          .map(
+            (e) => InvoiceProduct(
+              productId: e.productId,
+              quantity: e.quantity,
+              price: e.price,
+            ),
+          )
+          .toList(),
+      subtotal: _subtotal,
+      discount: _discount,
+      total: _payable,
+      description: "Invoice for Complaint #${widget.complaint.id}",
+      paymentMethod: paymentMethod,
+      paymentReferenceId: paymentId,
+    );
+
+    context.read<InvoiceCubit>().createInvoice(request: request);
+  }
+
+  void showInvoiceSuccessLottieDialog(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => Dialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Spacer(),
+                  IconButton(
+                    icon: Icon(Icons.close),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (_) => const HomePage()),
+                        (route) => false,
+                      );
+                    },
+                  ),
+                ],
+              ),
+              Lottie.asset(
+                'assets/lottie/success.json',
+                height: 150,
+                repeat: false,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                "Success!",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 15),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const InvoiceHistoryScreen(),
+                      ),
+                      (route) => false,
+                    );
+                  },
+                  child: const Text(
+                    "Go to Invoices",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _razorpayService.dispose();
+    super.dispose();
   }
 }

@@ -9,10 +9,20 @@ import 'package:smart_finger/presentation/cubit/complaints/complaint_state.dart'
 import 'package:smart_finger/presentation/cubit/tracking/tracking_cubit.dart';
 import 'complaints_detail_screen.dart';
 
-class CompletedScreen extends StatelessWidget {
+class CompletedScreen extends StatefulWidget {
   final bool isOnDuty;
-  const CompletedScreen({super.key, required this.isOnDuty});
+  final int technicianId;
+  const CompletedScreen({
+    super.key,
+    required this.isOnDuty,
+    required this.technicianId,
+  });
 
+  @override
+  State<CompletedScreen> createState() => _CompletedScreenState();
+}
+
+class _CompletedScreenState extends State<CompletedScreen> {
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -38,10 +48,13 @@ class CompletedScreen extends StatelessWidget {
                 return const Center(child: Text("No completed tasks"));
               }
               return ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: EdgeInsets.symmetric(horizontal: 16),
                 itemCount: completed.length,
-                itemBuilder: (context, index) =>
-                    _buildComplaintItem(completed[index], context),
+                itemBuilder: (context, index) => _buildComplaintItem(
+                  completed[index],
+                  context,
+                  widget.technicianId,
+                ),
               );
             }
             if (state is ComplaintsError) {
@@ -54,7 +67,11 @@ class CompletedScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildComplaintItem(Complaint c, BuildContext context) {
+  Widget _buildComplaintItem(
+    Complaint c,
+    BuildContext context,
+    int technicianId,
+  ) {
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       child: ListTile(
@@ -86,6 +103,8 @@ class CompletedScreen extends StatelessWidget {
             builder: (_) => ComplaintDetailsScreen(
               complaint: c,
               isOnDuty: context.read<TrackingCubit>().isOnDuty,
+
+              technicianId: technicianId,
             ),
           ),
         ),

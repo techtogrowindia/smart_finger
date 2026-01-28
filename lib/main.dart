@@ -8,9 +8,12 @@ import 'package:smart_finger/core/firebase/app_navigator.dart';
 import 'package:smart_finger/core/firebase/firebase_options.dart';
 import 'package:smart_finger/core/service_locator.dart' as di;
 import 'package:smart_finger/presentation/cubit/complaints/complaint_cubit.dart';
+import 'package:smart_finger/presentation/cubit/forgot_password/forgot_password_cubit.dart';
+import 'package:smart_finger/presentation/cubit/invoice/invoice_cubit.dart';
 import 'package:smart_finger/presentation/cubit/login/login_cubit.dart';
 import 'package:smart_finger/presentation/cubit/notifications/notification_cubit.dart';
 import 'package:smart_finger/presentation/cubit/otp/otp_cubit.dart';
+import 'package:smart_finger/presentation/cubit/products/product_cubit.dart';
 import 'package:smart_finger/presentation/cubit/profile/bank_cubit.dart';
 import 'package:smart_finger/presentation/cubit/profile/profile_cubit.dart';
 import 'package:smart_finger/presentation/cubit/tracking/tracking_cubit.dart';
@@ -63,6 +66,11 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (_) => di.sl<BankCubit>()),
         BlocProvider(create: (_) => di.sl<WithdrawalCubit>()),
         BlocProvider(create: (_) => di.sl<NotificationCubit>()),
+        BlocProvider(create: (_) => di.sl<ProductCubit>()),
+        BlocProvider(create: (_) => di.sl<ForgotPasswordCubit>()),
+        BlocProvider(create: (_) => di.sl<InvoiceCubit>()),
+        
+
       ],
       child:  MaterialApp(
         navigatorKey: AppNavigator.navigatorKey,

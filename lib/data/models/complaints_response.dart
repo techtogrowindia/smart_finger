@@ -23,6 +23,8 @@ class Complaint {
 
   final String createdAt;
   final String updatedAt;
+  final String warrantyLabel;
+  final bool invoiceAvailable;
 
   Complaint({
     required this.id,
@@ -42,6 +44,8 @@ class Complaint {
     required this.customerNumber,
     required this.createdAt,
     required this.updatedAt,
+    required this.warrantyLabel,
+    required this.invoiceAvailable,
   });
 
   factory Complaint.fromJson(Map<String, dynamic> json) {
@@ -63,6 +67,8 @@ class Complaint {
       customerNumber: json['customer_number'] ?? '',
       createdAt: json['created_at'] ?? '',
       updatedAt: json['updated_at'] ?? '',
+      warrantyLabel: json['warranty_label'] ?? '',
+      invoiceAvailable: json['invoice_available'] ?? false,
     );
   }
 }

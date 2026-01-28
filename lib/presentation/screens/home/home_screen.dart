@@ -22,7 +22,9 @@ import 'package:smart_finger/presentation/screens/common/no_internet_screen.dart
 import 'package:smart_finger/presentation/screens/complaints/complaints_detail_screen.dart';
 import 'package:smart_finger/presentation/screens/complaints/completed_screen.dart';
 import 'package:smart_finger/presentation/screens/complaints/hold_screen.dart';
+import 'package:smart_finger/presentation/screens/invoice/invoice_history_screen.dart';
 import 'package:smart_finger/presentation/screens/notifications/notifications_screen.dart';
+import 'package:smart_finger/presentation/screens/products/product_list_screen.dart';
 import 'package:smart_finger/presentation/screens/wallet/wallet_screen.dart';
 import 'package:smart_finger/presentation/screens/profile/profile_screen.dart';
 
@@ -48,6 +50,9 @@ class _HomePageState extends State<HomePage> {
   bool isLocationReady = false;
   DateTime? selectedDate;
   bool _askedNotification = false;
+
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   @override
   void initState() {
     super.initState();
@@ -122,6 +127,8 @@ class _HomePageState extends State<HomePage> {
         return false;
       },
       child: Scaffold(
+        key: _scaffoldKey,
+        drawer: _buildDrawer(),
         resizeToAvoidBottomInset: false,
         backgroundColor: Colors.white,
         body: BlocListener<ProfileCubit, ProfileState>(
@@ -140,8 +147,14 @@ class _HomePageState extends State<HomePage> {
             index: _currentIndex,
             children: [
               _buildHomeTab(),
-              CompletedScreen(isOnDuty: context.read<TrackingCubit>().isOnDuty),
-              HoldScreen(isOnDuty: context.read<TrackingCubit>().isOnDuty),
+              CompletedScreen(
+                isOnDuty: context.read<TrackingCubit>().isOnDuty,
+                technicianId: userId ?? 0,
+              ),
+              HoldScreen(
+                isOnDuty: context.read<TrackingCubit>().isOnDuty,
+                technicianId: userId ?? 0,
+              ),
               WalletScreen(initialBalance: walletAmount),
               profileData == null
                   ? const Center(child: CircularProgressIndicator())
@@ -292,9 +305,88 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Widget _buildDrawer() {
+    return Drawer(
+      child: Column(
+        children: [
+          DrawerHeader(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [AppColors.primary, Color(0xffa55bff)],
+              ),
+            ),
+            child: Align(
+              alignment: Alignment.center,
+              child: Text(
+                profileData?.name.toUpperCase() ?? "User".toUpperCase(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+
+          ListTile(
+            leading: const Icon(Icons.home),
+            title: const Text("Home"),
+            onTap: () {
+              Navigator.pop(context);
+              setState(() => _currentIndex = 0);
+            },
+          ),
+
+          ListTile(
+            leading: const Icon(Icons.list),
+            title: const Text("Products"),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => ProductListScreen()),
+              );
+            },
+          ),
+
+          ListTile(
+            leading:  Icon(Icons.receipt_long),
+            title: const Text("Invoices"),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => InvoiceHistoryScreen()),
+              );
+            },
+          ),
+
+          ListTile(
+            leading: const Icon(Icons.settings),
+            title: const Text("Settings"),
+            onTap: () {
+              Navigator.pop(context);
+              setState(() => _currentIndex = 4);
+            },
+          ),
+
+          const Spacer(),
+
+          // ListTile(
+          //   leading: const Icon(Icons.logout, color: Colors.red),
+          //   title: const Text("Logout"),
+          //   onTap: () {
+          //     // TODO: logout logic
+          //   },
+          // ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+      padding: const EdgeInsets.only(top: 40, left: 0, right: 20, bottom: 20),
       width: double.infinity,
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -313,6 +405,13 @@ class _HomePageState extends State<HomePage> {
             children: [
               Row(
                 children: [
+                  IconButton(
+                    padding: EdgeInsets.zero,
+                    icon: const Icon(Icons.menu, color: Colors.white),
+                    onPressed: () {
+                      _scaffoldKey.currentState?.openDrawer();
+                    },
+                  ),
                   const Text(
                     "SmartFingers",
                     style: TextStyle(
@@ -329,6 +428,33 @@ class _HomePageState extends State<HomePage> {
                       );
                     },
                     icon: Icon(Icons.notifications, color: Colors.white),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(left: 10),
+                    child: const Icon(
+                      Icons.location_on,
+                      color: Colors.white70,
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 5),
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.5,
+                    child: Text(
+                      currentLocation,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: Colors.white70),
+                    ),
                   ),
                 ],
               ),
@@ -399,20 +525,6 @@ class _HomePageState extends State<HomePage> {
                     },
                   ),
                 ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              const Icon(Icons.location_on, color: Colors.white70, size: 18),
-              const SizedBox(width: 5),
-              Flexible(
-                child: Text(
-                  currentLocation,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: Colors.white70),
-                ),
               ),
             ],
           ),
@@ -543,6 +655,7 @@ class _HomePageState extends State<HomePage> {
                 builder: (_) => ComplaintDetailsScreen(
                   complaint: c,
                   isOnDuty: context.read<TrackingCubit>().isOnDuty,
+                  technicianId: userId ?? 0,
                 ),
               ),
             ),

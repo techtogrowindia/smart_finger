@@ -9,9 +9,13 @@ import 'package:smart_finger/presentation/cubit/complaints/complaint_state.dart'
 import 'complaints_detail_screen.dart';
 
 class HoldScreen extends StatefulWidget {
-  
   final bool isOnDuty;
-  const HoldScreen({super.key, required this.isOnDuty});
+  final int technicianId;
+  const HoldScreen({
+    super.key,
+    required this.isOnDuty,
+    required this.technicianId,
+  });
 
   @override
   State<HoldScreen> createState() => _HoldScreenState();
@@ -21,10 +25,9 @@ class _HoldScreenState extends State<HoldScreen> {
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-          onWillPop: () async {
-            
-            return false;
-          },
+      onWillPop: () async {
+        return false;
+      },
       child: Scaffold(
         appBar: AppBar(
           title: const Text("Hold", style: TextStyle(color: Colors.white)),
@@ -41,9 +44,13 @@ class _HoldScreenState extends State<HoldScreen> {
               final hold = state.complaints
                   .where((c) => c.status.toUpperCase() == 'HOLD')
                   .toList();
-              if (hold.isEmpty) return const Center(child: Text("No hold tasks"));
+              if (hold.isEmpty)
+                return const Center(child: Text("No hold tasks"));
               return ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
                 itemCount: hold.length,
                 itemBuilder: (context, index) =>
                     _buildComplaintItem(hold[index], context),
@@ -88,7 +95,11 @@ class _HoldScreenState extends State<HoldScreen> {
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => ComplaintDetailsScreen(complaint: c, isOnDuty: widget.isOnDuty,),
+            builder: (_) => ComplaintDetailsScreen(
+              complaint: c,
+              isOnDuty: widget.isOnDuty,
+              technicianId: widget.technicianId,
+            ),
           ),
         ),
       ),
