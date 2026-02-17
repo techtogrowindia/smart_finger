@@ -30,6 +30,7 @@ class ProfileData {
   final String district;
   final String pincode;
   final String wallet;
+  final String cashInHand;
   final String profileImage;
 
   /// NEW FIELDS
@@ -47,6 +48,7 @@ class ProfileData {
     required this.pincode,
     required this.wallet,
     required this.profileImage,
+    required this.cashInHand,
     this.bankDetails,
     required this.createdAt,
     required this.updatedAt,
@@ -64,6 +66,7 @@ class ProfileData {
       pincode: json["pincode"] ?? "",
 
       wallet: json["wallet"] ?? "0",
+      cashInHand: json["cash_in_hands"] ?? "0",
       profileImage: json["profile_image"] ?? "",
 
       bankDetails: json["bank_details"] != null

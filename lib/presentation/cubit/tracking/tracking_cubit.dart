@@ -11,14 +11,27 @@ class TrackingCubit extends Cubit<TrackingState> {
 
   final TrackingRepository repository;
 
-  double _totalKm = 0;
-  double? _lastLat;
-  double? _lastLng;
+  double? _startLat;
+  double? _startLng;
 
   bool _isOnDuty = false;
   bool _apiBusy = false;
 
   bool get isOnDuty => _isOnDuty;
+
+  void setInitialDuty({required bool isOnDuty, double? lat, double? lng}) {
+    _isOnDuty = isOnDuty;
+
+    if (isOnDuty) {
+      _startLat = lat;
+      _startLng = lng;
+    } else {
+      _startLat = null;
+      _startLng = null;
+    }
+
+    emit(TrackingKmUpdated(0));
+  }
 
   Future<void> onDuty({
     required int userId,
@@ -31,9 +44,9 @@ class TrackingCubit extends Cubit<TrackingState> {
     emit(TrackingInProgress());
 
     _isOnDuty = true;
-    _totalKm = 0;
-    _lastLat = lat;
-    _lastLng = lng;
+
+    _startLat = lat;
+    _startLng = lng;
 
     try {
       await repository.sendTracking(
@@ -46,7 +59,7 @@ class TrackingCubit extends Cubit<TrackingState> {
         ),
       );
 
-      emit(TrackingKmUpdated(_totalKm));
+      emit(TrackingKmUpdated(0));
     } on SocketException {
       emit(TrackingError("NO_INTERNET"));
     } catch (e) {
@@ -56,51 +69,31 @@ class TrackingCubit extends Cubit<TrackingState> {
     }
   }
 
-  void onReached({required double complaintLat, required double complaintLng}) {
-    if (!_isOnDuty) return;
-
-    if (_lastLat == null || _lastLng == null) {
-      _lastLat = complaintLat;
-      _lastLng = complaintLng;
-      emit(TrackingKmUpdated(_totalKm));
-      return;
-    }
-
-    final meters = Geolocator.distanceBetween(
-      _lastLat!,
-      _lastLng!,
-      complaintLat,
-      complaintLng,
-    );
-
-    _totalKm += meters / 1000;
-
-    _lastLat = complaintLat;
-    _lastLng = complaintLng;
-
-    emit(TrackingKmUpdated(_totalKm));
-  }
-
-  Future<void> offDuty({
-    required int userId,
-    required double lat,
-    required double lng,
-  }) async {
+  Future<void> offDuty({required int userId}) async {
     if (!_isOnDuty || _apiBusy) return;
 
     _apiBusy = true;
     emit(TrackingInProgress());
 
+    double totalKm = 0;
+
     try {
-      if (_lastLat != null && _lastLng != null) {
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      final lat = position.latitude;
+      final lng = position.longitude;
+
+      if (_startLat != null && _startLng != null) {
         final meters = Geolocator.distanceBetween(
-          _lastLat!,
-          _lastLng!,
+          _startLat!,
+          _startLng!,
           lat,
           lng,
         );
 
-        _totalKm += meters / 1000;
+        totalKm = meters / 1000;
       }
 
       await repository.sendTracking(
@@ -108,19 +101,16 @@ class TrackingCubit extends Cubit<TrackingState> {
           userId: userId,
           latitude: lat,
           longitude: lng,
-          km: double.parse(_totalKm.toStringAsFixed(2)),
+          km: double.parse(totalKm.toStringAsFixed(2)),
           duty: 0,
         ),
       );
 
-      emit(TrackingKmUpdated(_totalKm));
+      emit(TrackingKmUpdated(totalKm));
 
       _isOnDuty = false;
-      _totalKm = 0;
-      _lastLat = null;
-      _lastLng = null;
-    } on SocketException {
-      emit(TrackingError("NO_INTERNET"));
+      _startLat = null;
+      _startLng = null;
     } catch (e) {
       emit(TrackingError(e.toString()));
     } finally {

@@ -42,6 +42,7 @@ class _HomePageState extends State<HomePage> {
   bool isOnDuty = false;
   ProfileData? profileData;
   String walletAmount = "0";
+  String cashInHand = "0";
   int completedCount = 0;
   int holdCount = 0;
   int? userId;
@@ -136,9 +137,15 @@ class _HomePageState extends State<HomePage> {
             if (state is ProfileSuccess) {
               profileData = state.response.data;
               walletAmount = profileData!.wallet;
+              cashInHand = profileData!.cashInHand;
               userId = profileData!.userId;
 
               setState(() {});
+              context.read<TrackingCubit>().setInitialDuty(
+                isOnDuty: profileData!.duty == 'online',
+                lat: currentLat,
+                lng: currentLng,
+              );
 
               FcmHelper(technicianId: userId!).initFCM();
             }
@@ -155,7 +162,10 @@ class _HomePageState extends State<HomePage> {
                 isOnDuty: context.read<TrackingCubit>().isOnDuty,
                 technicianId: userId ?? 0,
               ),
-              WalletScreen(initialBalance: walletAmount),
+              WalletScreen(
+                initialBalance: walletAmount,
+                cashInHand: cashInHand,
+              ),
               profileData == null
                   ? const Center(child: CircularProgressIndicator())
                   : ProfileScreen(profile: profileData!),
@@ -350,7 +360,7 @@ class _HomePageState extends State<HomePage> {
           ),
 
           ListTile(
-            leading:  Icon(Icons.receipt_long),
+            leading: Icon(Icons.receipt_long),
             title: const Text("Invoices"),
             onTap: () {
               Navigator.pop(context);
@@ -371,14 +381,6 @@ class _HomePageState extends State<HomePage> {
           ),
 
           const Spacer(),
-
-          // ListTile(
-          //   leading: const Icon(Icons.logout, color: Colors.red),
-          //   title: const Text("Logout"),
-          //   onTap: () {
-          //     // TODO: logout logic
-          //   },
-          // ),
         ],
       ),
     );
@@ -509,14 +511,9 @@ class _HomePageState extends State<HomePage> {
                                     lng: currentLng!,
                                   );
                                 } else {
-                                  // Stop background service
                                   service.invoke("stopService");
 
-                                  trackingCubit.offDuty(
-                                    userId: userId!,
-                                    lat: currentLat!,
-                                    lng: currentLng!,
-                                  );
+                                  trackingCubit.offDuty(userId: userId!);
                                 }
                               },
                         activeThumbColor: AppColors.primary,

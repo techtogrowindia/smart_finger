@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:smart_finger/core/shared_prefs_helper.dart';
+import 'package:smart_finger/presentation/screens/home/home_screen.dart';
 import 'package:smart_finger/presentation/screens/login/login_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -16,6 +18,26 @@ class _SplashScreenState extends State<SplashScreen>
   late Animation<double> _scaleAnimation;
   late Animation<double> _opacityAnimation;
 
+  void _checkLogin() async {
+    await Future.delayed(const Duration(seconds: 3));
+
+    final token = await SharedPrefsHelper.getToken();
+
+    if (!mounted) return;
+
+    if (token != null && token.isNotEmpty) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const HomePage()),
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginPage()),
+      );
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -25,18 +47,17 @@ class _SplashScreenState extends State<SplashScreen>
       duration: const Duration(seconds: 2),
     );
 
-    // Logo slides from bottom
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 1.5),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _logoController, curve: Curves.easeOut));
 
-    // Logo scales up
+   
     _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
       CurvedAnimation(parent: _logoController, curve: Curves.easeOutBack),
     );
 
-    // Logo fades in
+    
     _opacityAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
@@ -44,13 +65,7 @@ class _SplashScreenState extends State<SplashScreen>
 
     _logoController.forward();
 
-    // Navigate to LoginPage after 3 seconds
-    Timer(const Duration(seconds: 3), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const LoginPage()),
-      );
-    });
+    _checkLogin();
   }
 
   @override
@@ -64,7 +79,7 @@ class _SplashScreenState extends State<SplashScreen>
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: Colors.white, // Full white background
+      backgroundColor: Colors.white,
       body: Center(
         child: SlideTransition(
           position: _slideAnimation,
@@ -74,7 +89,7 @@ class _SplashScreenState extends State<SplashScreen>
               opacity: _opacityAnimation,
               child: Image.asset(
                 "assets/images/smartfinger_logo.jpeg",
-                width: size.width * 0.60, // responsive size
+                width: size.width * 0.60, 
               ),
             ),
           ),

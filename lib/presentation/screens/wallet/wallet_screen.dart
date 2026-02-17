@@ -6,8 +6,13 @@ import 'package:smart_finger/presentation/cubit/withdrawl/withdrawl_state.dart';
 
 class WalletScreen extends StatefulWidget {
   final String initialBalance;
+  final String cashInHand;
 
-  const WalletScreen({super.key, required this.initialBalance});
+  const WalletScreen({
+    super.key,
+    required this.initialBalance,
+    required this.cashInHand,
+  });
 
   @override
   State<WalletScreen> createState() => _WalletScreenState();
@@ -84,10 +89,13 @@ class _WalletScreenState extends State<WalletScreen> {
           ),
 
           body: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+            padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                _balanceCard(),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [_cash(), SizedBox(width: 10), _balanceCard()],
+                ),
 
                 const SizedBox(height: 10),
 
@@ -105,9 +113,39 @@ class _WalletScreenState extends State<WalletScreen> {
     );
   }
 
+  Widget _cash() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppColors.primary, Colors.purpleAccent],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        children: [
+          const Icon(Icons.money, size: 50, color: Colors.white),
+          const SizedBox(height: 12),
+          const Text("Cash in Hands", style: TextStyle(color: Colors.white70)),
+          const Text("", style: TextStyle(color: Colors.white70)),
+          const SizedBox(height: 6),
+          Text(
+            "₹${widget.cashInHand}",
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _balanceCard() {
     return Container(
-      width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -125,16 +163,14 @@ class _WalletScreenState extends State<WalletScreen> {
             color: Colors.white,
           ),
           const SizedBox(height: 12),
-          const Text(
-            "Available Balance",
-            style: TextStyle(color: Colors.white70),
-          ),
+          const Text("Wallet Amount", style: TextStyle(color: Colors.white70)),
+          const Text("(Travel claim)", style: TextStyle(color: Colors.white70)),
           const SizedBox(height: 6),
           Text(
             "₹${_availableBalance.toStringAsFixed(2)}",
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 32,
+              fontSize: 28,
               fontWeight: FontWeight.bold,
             ),
           ),

@@ -3,7 +3,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 class SharedPrefsHelper {
   static const tokenKey = "auth_token";
   static const idKey = "user_id";
+  static const String _locationContentKey = "location_content";
 
+  static Future<void> saveLocationConsent(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_locationContentKey, value);
+  }
+
+  static Future<bool> hasLocationConsent() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_locationContentKey) ?? false;
+  }
 
   static Future<void> saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
@@ -20,7 +30,6 @@ class SharedPrefsHelper {
     prefs.remove(tokenKey);
   }
 
-  
   static Future<void> saveID(int id) async {
     final prefs = await SharedPreferences.getInstance();
     prefs.setInt(idKey, id);
@@ -31,13 +40,26 @@ class SharedPrefsHelper {
     return prefs.getInt(idKey);
   }
 
+  static Future<void> saveTrackingInterval(int minutes) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt("tracking_interval", minutes);
+  }
+
+  static Future<int> getTrackingInterval() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt("tracking_interval") ?? 1; // default 1 minute
+  }
+
   // Remember Me credentials
   static const phoneKey = "phone";
   static const passwordKey = "password";
   static const rememberMeKey = "remember_me";
 
   static Future<void> saveCredentials(
-      String phone, String password, bool remember) async {
+    String phone,
+    String password,
+    bool remember,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     if (remember) {
       await prefs.setString(phoneKey, phone);

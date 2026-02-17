@@ -17,7 +17,6 @@ import 'package:smart_finger/presentation/cubit/invoice/invoice_state.dart';
 import 'package:smart_finger/presentation/cubit/otp/otp_cubit.dart';
 import 'package:smart_finger/presentation/cubit/otp/otp_state.dart';
 import 'package:smart_finger/presentation/cubit/products/product_cubit.dart';
-import 'package:smart_finger/presentation/cubit/tracking/tracking_cubit.dart';
 import 'package:smart_finger/presentation/screens/common/google_map_screen.dart';
 import 'package:smart_finger/presentation/screens/common/no_internet_screen.dart';
 import 'package:smart_finger/presentation/screens/common/otp_bottom_sheet.dart';
@@ -411,13 +410,6 @@ class _ComplaintDetailsScreenState extends State<ComplaintDetailsScreen> {
                               ),
                             );
                             return;
-                          }
-
-                          if (selectedStatus == "REACHED") {
-                            context.read<TrackingCubit>().onReached(
-                              complaintLat: double.parse(c.latitude),
-                              complaintLng: double.parse(c.longitude),
-                            );
                           }
 
                           if (selectedStatus == "COMPLETED") {

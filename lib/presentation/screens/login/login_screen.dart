@@ -8,6 +8,7 @@ import 'package:smart_finger/core/shared_prefs_helper.dart';
 import 'package:smart_finger/presentation/cubit/login/login_cubit.dart';
 import 'package:smart_finger/presentation/cubit/login/login_state.dart';
 import 'package:smart_finger/presentation/screens/common/exit_dialog.dart';
+import 'package:smart_finger/presentation/screens/common/location_usage_dialog.dart';
 import 'package:smart_finger/presentation/screens/common/no_internet_screen.dart';
 import 'package:smart_finger/presentation/screens/forgot_password/forgot_password_screen.dart';
 import 'package:smart_finger/presentation/screens/home/home_screen.dart';
@@ -75,6 +76,18 @@ class _LoginPageState extends State<LoginPage> {
                         passCtrl.text.trim(),
                         rememberMe,
                       );
+                      await SharedPrefsHelper.saveTrackingInterval(
+                        state.response.minutes ?? 1,
+                      );
+
+                      final hasConsent =
+                          await SharedPrefsHelper.hasLocationConsent();
+
+                      if (!hasConsent) {
+                        final agreed = await LocationUsageDialog.show(context);
+
+                        if (!agreed) return;
+                      }
 
                       Navigator.pushReplacement(
                         context,
